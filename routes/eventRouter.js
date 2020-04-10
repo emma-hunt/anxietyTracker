@@ -115,6 +115,43 @@ function routes(Event) {
     });
   });
 
+  // check to see if event exists and it's probability
+  eventRouter.route('/events/check').post((req, res) => {
+    console.log("checking for event");
+    // checks to see if the event exists. returns if panic probability is high enough to ask the user
+    Event.find((err, events) => {
+      if (err) {
+        return res.send(err);
+      }
+      // no problems
+      var foundOne = false;
+      events.forEach(obj => {
+        var record = JSON.parse(JSON.stringify(obj));
+        var stepDif = Math.abs(record.steps - req.body.steps);
+        var latDif = Math.abs(record.latitude - req.body.latitude);
+        var longDif = Math.abs(record.longitude - req.body.longitude);
+
+        if (!foundOne && latDif <= 0.00023 && longDif <= 0.00023 && stepDif <= 100) {
+          console.log("found one");
+          console.log(record.panicProbability);
+          foundOne = true;
+          var eventId = record._id;
+          var askUser = true;
+          if(record.panicProbability < -0.9) {
+            // don't need to check
+            askUser = false;
+          }
+          console.log(askUser);
+          return res.status(200).json({ queryUser: askUser});
+        }
+      });
+      if (!foundOne) {
+        // workable event was not found, must check
+        return res.status(200).json({ queryUser: true});
+      }
+    });
+  });
+
   // find a single event by id
   eventRouter.use('/events/:eventId', (req, res, next) => {
     Event.findById(req.params.eventId, (err, event) => {
