@@ -7,7 +7,7 @@ const eventModel = new Schema(
     latitude: {type:Number},
     longitude: {type:Number},
     steps: {type:Number},
-    panicAttack:{type:Boolean},
+    panicProbability:{type:Number, default: 0.0},
   },
 );
 

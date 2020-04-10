@@ -28,34 +28,91 @@ function routes(Event) {
       if (err) {
         return res.send(err);
       }
-      console.log(events);
-      console.log(typeof events)
-      console.log("SPLIT!!!!")
-      events.forEach(event => {
-        var obj = JSON.parse(JSON.stringify(event));
-        console.log(obj._id);
-      })
       return res.json(events);
     });
   });
 
   // post a new event
   eventRouter.route('/events').post((req, res) => {
-    const event = new Event(req.body);
-    event.save();
-    console.log(event);
-    if (event.panicAttack) {
-      postData('https://rest.nexmo.com/sms/json', {
-        api_key: "fd3b1fdc",
-        api_secret: "DWjgqTMSTngfu5IX",
-        to: 14252212177,
-        from: 17722612575,
-        text: "User is having a panic attack and may need assistance"
-      }).then((data) => {
-        console.log(data);
+    // look for exisiting post that is similar
+    Event.find((err, events) => {
+      if (err) {
+        return res.send(err);
+      }
+      // no problems
+      var foundOne = false;
+      events.forEach(obj => {
+        var record = JSON.parse(JSON.stringify(obj));
+        var stepDif = Math.abs(record.steps - req.body.steps);
+        var latDif = Math.abs(record.latitude - req.body.latitude);
+        var longDif = Math.abs(record.longitude - req.body.longitude);
+
+        if (!foundOne && latDif <= 0.00023 && longDif <= 0.00023 && stepDif <= 100) {
+          console.log("found one");
+          console.log(record._id);
+          Event.findById(record._id, (err, event) => {
+            if (err) {
+              console.log("Could not re find correct event");
+              return res.send(err);
+            }
+            console.log(event);
+            if (req.body.panicAttack) {
+              // increase panic probability
+              console.log("more panic");
+              event.panicProbability = Math.min(event.panicProbability + 0.05, 1.0);
+              postData('https://rest.nexmo.com/sms/json', {
+                api_key: "fd3b1fdc",
+                api_secret: "DWjgqTMSTngfu5IX",
+                to: 14252212177,
+                from: 17722612575,
+                text: "User is having a panic attack and may need assistance"
+              }).then((data) => {
+                console.log(data);
+              });
+            }
+            else {
+              console.log("less panic");
+              // decrease panic probability
+              event.panicProbability = Math.max(event.panicProbability - 0.05, -1.0);
+            }
+            console.log(event);
+            event.save((err) => {
+              if (err) {
+                console.log("error in saving change");
+                return res.send(err);
+              }
+              return res.json(event);
+            });
+          });
+          foundOne = true;
+        }
       });
-    }
-    return res.status(201).json(event);
+      if (!foundOne) {
+        // workable event was not found, must create one
+        console.log("creating new");
+        const event = new Event(req.body);
+        if (req.body.panicAttack) {
+          // increase panic probability
+          event.panicProbability = 0.05;
+          postData('https://rest.nexmo.com/sms/json', {
+            api_key: "fd3b1fdc",
+            api_secret: "DWjgqTMSTngfu5IX",
+            to: 14252212177,
+            from: 17722612575,
+            text: "User is having a panic attack and may need assistance"
+          }).then((data) => {
+            console.log(data);
+          });
+        }
+        else {
+          // decrease panic probability
+          event.panicProbability = -0.05;
+        }
+        event.save();
+        console.log(event);
+        return res.status(201).json(event);
+      }
+    });
   });
 
   // find a single event by id
