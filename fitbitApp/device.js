@@ -64,7 +64,6 @@ hrm.onreading = function() {
 messaging.peerSocket.onmessage = evt => {
   // received message from companion
   console.log("recieved message from phone");
-  console.log(evt.data.queryUser);
   if (evt.data.queryUser == true) {
     // need to ask if this is a panic attack
     // Show the popup

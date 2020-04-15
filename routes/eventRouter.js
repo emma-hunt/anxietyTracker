@@ -99,7 +99,7 @@ function routes(Event) {
             api_secret: "DWjgqTMSTngfu5IX",
             to: 14252212177,
             from: 17722612575,
-            text: "User is having a panic attack and may need assistance"
+            text: "User is having a panic or anxiety attack and may need assistance"
           }).then((data) => {
             console.log(data);
           });
