@@ -8,5 +8,4 @@ Anxiety tracker is built on three principles:
   3. Apps should adapt to the individual. Apps should learn as we use them, both from our active input, as well as our passive use.
   
 Anxiety tracker runs on a fitbit smart watch and learns the user's typical behavior to detect events which break established patterns.
-The app learns the individual's typical heart rate range as correlated to various levels of activity. If the user's heart rate spikes when inactive, a state indeicitive of high stress,
-it will notify a designated contact of the user's distress and advise support should be offered.
+The app learns the individual's typical heart rate range as correlated to various levels of activity. If the user's heart rate spikes when inactive, a state indicative of high stress, it will notify a designated contact of the user's distress and advise support should be offered.
